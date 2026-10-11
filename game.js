@@ -2,8 +2,8 @@
 (() => {
 const $=id=>document.getElementById(id), canvas=$('world'), gl=canvas.getContext('webgl',{antialias:true,alpha:false});
 if(!gl){$('error').textContent='WebGL is unavailable. Please enable hardware acceleration in your browser.';$('play').disabled=true;return;}
-const vs=`attribute vec3 p;attribute vec3 c;uniform mat4 vp;uniform vec3 eye;varying vec3 color;varying float dist;void main(){gl_Position=vp*vec4(p,1.);color=c;dist=distance(p,eye);}`;
-const fs=`precision mediump float;varying vec3 color;varying float dist;uniform vec3 fog;void main(){float f=smoothstep(160.,440.,dist);gl_FragColor=vec4(mix(color,fog,f),1.);}`;
+const vs=`attribute vec3 p;attribute vec3 c;uniform mat4 vp;varying vec3 color;varying vec3 world;void main(){gl_Position=vp*vec4(p,1.);color=c;world=p;}`;
+const fs=`precision mediump float;varying vec3 color;varying vec3 world;uniform vec3 eye;uniform vec3 fog;void main(){float f=smoothstep(160.,440.,distance(world,eye));gl_FragColor=vec4(mix(color,fog,f),1.);}`;
 function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vs));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
 const data=[],solids=[];let seed=42;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
@@ -11,8 +11,8 @@ function rgb(h){return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/
 const faces=[[[0,1,0],[0,1,1],[1,1,1],[1,1,0],1],[[0,0,1],[0,0,0],[1,0,0],[1,0,1],.55],[[1,0,0],[1,1,0],[1,1,1],[1,0,1],.83],[[0,0,1],[0,1,1],[0,1,0],[0,0,0],.69],[[1,0,1],[1,1,1],[0,1,1],[0,0,1],.91],[[0,0,0],[0,1,0],[1,1,0],[1,0,0],.76]];
 function box(x,y,z,w,h,d,col,solid=false){const color=rgb(col);for(const f of faces)for(const i of [0,1,2,0,2,3]){const v=f[i];data.push(x+(v[0]-.5)*w,y+v[1]*h,z+(v[2]-.5)*d,...color.map(c=>c*f[4]));}if(solid)solids.push({x1:x-w/2,x2:x+w/2,z1:z-d/2,z2:z+d/2,y1:y,y2:y+h});}
 function path(x,z,w,d){box(x,.025,z,w,.075,d,'d9cfb0');}
-function tree(x,z,s=1){box(x,0,z,1.3*s,6*s,1.3*s,'75604a',true);box(x,4*s,z,6*s,4*s,6*s,'537a46');box(x,7*s,z,4*s,2*s,4*s,'739653');box(x-2*s,4*s,z+1*s,3*s,3*s,4*s,'64894c');}
-function lamp(x,z){box(x,0,z,.35,6,.35,'304842');box(x,5.7,z,1.2,1.3,1.2,'ffe1a0');box(x,7,z,1.6,.3,1.6,'304842');}
+function tree(x,z,s=1){box(x,0,z,1.1*s,6*s,1.1*s,'75604a',true);for(const a of [-1,1]){box(x+a*s,3*s,z,.75*s,2*s,.8*s,'75604a');box(x,4*s,z+a*s,.8*s,2*s,.75*s,'75604a');}for(const [dx,dy,dz,w,h,d,c] of [[0,7,0,5,2,5,'547645'],[-2,5,0,4,3,5,'42673e'],[2,5,1,4,3,5,'67864b'],[0,5,-2,5,3,4,'587b44'],[-1,5,3,5,2,4,'6e8b50'],[1,8,0,3,1,3,'729555'],[-3,6,-2,3,2,3,'4e733e'],[3,6,-2,3,3,3,'6b8b4e']])box(x+dx*s,dy*s,z+dz*s,w*s,h*s,d*s,c);}
+function lamp(x,z){box(x,0,z,1,.3,1,'304842');box(x,.3,z,.6,.6,.6,'304842');box(x,.9,z,.22,4.8,.22,'304842');box(x,5.6,z,.7,.25,.7,'304842');box(x,5.85,z,.9,.35,.9,'f0ead4');box(x,6.2,z,1.15,.8,1.15,'fff5db');box(x,7,z,.8,.3,.8,'f0ead4');}
 function bench(x,z){box(x,.8,z,3.8,.4,1.3,'916c4c');box(x,1.2,z-.5,3.8,1,.2,'916c4c');for(const a of [-1.4,1.4])box(x+a,0,z,.3,.8,.8,'394b43');}
 // Site plan: north is -Z; Congress approaches from the south.
 box(0,-1,0,700,1,700,'8eaa64');
@@ -30,7 +30,7 @@ for(const x of [-239,-148,145,222,300])for(const z of [-278,-194,-113,-28,83,165
 building(79,93,15,26,10,'c7a178');building(-148,166,26,20,10,'e9e0c3');for(let x=-159;x<-135;x+=5)box(x,0,178,1.1,8,1.1,'fff0cf');
 for(let i=0;i<95;i++){const x=(rand()-.5)*580,z=(rand()-.5)*560;if(Math.abs(x)>280||Math.abs(z)>275)tree(x,z,1+rand());}
 // Hollow Capitol, connected lobbies and office corridors from supplied plan.
-const pink='c7927f', trim='e7baa0', cream='e1d0a9';
+const pink='c5a48b', trim='e0c2a0', cream='e1d0a9';
 function wall(x,z,w,d,h=16,y=0,col=pink){box(x,y,z,w,h,d,col,true);}
 function capitol(ox,basement=false){
 const h=basement?8:17, col=basement?'b8aa8e':pink;
@@ -45,10 +45,7 @@ for(let x=-9;x<=9;x++)for(let z=-9;z<=9;z++)if(x*x+z*z<90)box(ox+x,.22,z,1,.02,1
 for(let x=-5;x<=5;x++)for(let z=-5;z<=5;z++)if((Math.abs(x)<1.5&&Math.abs(z)<5)||(Math.abs(z)<1.5&&Math.abs(x)<5)||Math.abs(x)+Math.abs(z)<4)box(ox+x,.25,z,1,.025,1,'846a46');
 for(const x of [-11,11])for(const z of [-11,11]){box(ox+x,0,z,2,h,2,cream,true);box(ox+x,h-1,z,3,1,3,trim);}
 if(basement){box(ox,8,0,130,1,29,cream);box(ox,8,0,29,1,65,cream);wall(ox,32,8,1,8,0,cream);wall(ox,-32,8,1,8,0,cream);wall(ox-65,0,1,12,8,0,cream);wall(ox+65,0,1,12,8,0,cream);}else{
-// Square-edged voxel dome with hollow interior and open central shaft.
-for(let y=18;y<49;y+=2){const radius=y<27?14:Math.max(3,Math.round(14*Math.sqrt(Math.max(0,1-((y-27)/24)**2))));for(let x=-radius;x<=radius;x+=2)for(let z=-radius;z<=radius;z+=2){const r=Math.hypot(x,z);if(r<=radius+1&&r>=radius-2.4)box(ox+x,y,z,2,2,2,y%6===0?trim:pink);}}
-box(ox,49,0,6,2,6,trim);box(ox,51,0,2.5,5,2.5,'d0ae7c');box(ox,56,0,1.3,3,1.3,'e2c897');
-for(let a=0;a<16;a++){const t=a*Math.PI/8;box(ox+Math.cos(t)*13.2,21,Math.sin(t)*13.2,1.2,5,1.2,'596b64');}
+// Detailed hollow dome is built with the photo-inspired exterior.
 }
 // Lift pad in the north lobby.
 box(ox, .24,-26,7,.03,5,'739b89');for(const x of [-4,4])box(ox+x,0,-27,.3,5,.3,'bfa26d');
@@ -77,8 +74,7 @@ for(const s of [-1,1]){box(s*8,upperY,0,.3,1.25,16,'a38659',true);box(0,upperY,s
 box(0,upperY+.01,-26,7,.04,5,'739b89');
 for(const y of [.35,upperY]){for(const x of [-4,4])box(x,y,-27,.35,5,.35,'bfa26d');box(0,y+4.7,-27,8.3,.35,.35,'bfa26d');}
 // Front pediment: stepped silhouette above the columned entry.
-for(let i=0;i<5;i++)box(0,12+i,34,28-i*5,1,2,trim);
-for(const x of [-8,8]){box(x,0,38,1,9,1,'746b58');box(x+2,7,38,4,2.3,.2,x<0?'e0d8c0':'bd7566');}
+// Detailed entrance towers, steps and flags are built below.
 for(const x of [-65,65]){path(x,0,12,12);for(let z=-8;z<=8;z+=4)box(x+(x<0?-1:1),0,z,1,12,1,trim,true);}
 // Northern extension courtyard and its skylights.
 path(0,-84,24,57);for(const x of [-20,20])for(const z of [-63,-89,-115]){box(x,.15,z,15,.6,10,'b9b8a1');box(x,.75,z,12,.5,7,'789b95');}box(0,.2,-94,8,1.4,8,'c7b795');box(0,1.6,-94,5,.2,5,'719f9c');
@@ -86,6 +82,7 @@ for(const x of [-80,80])for(const z of [60,98,-55,-129])tree(x,z,1.1);
 for(const z of [151,177,222]){box(4,.2,z,3,1.1,6,'a67758');box(4,1.3,z,2.8,.9,3,'a4bdb6');for(const a of [-1.6,1.6])for(const b of [-2,2])box(4+a,.1,z+b,.4,.8,.8,'34443f');}
 const sites=[{x:0,z:54,name:'The South Promenade',text:'The Capitol anchors Congress Avenue.'},{x:0,z:0,name:'The Rotunda',text:'Four wings meet beneath the voxel dome.'},{x:-54,z:0,name:'The West Wing',text:'Office doors line the first-floor corridor.'},{x:0,z:-109,name:'The Capitol Extension',text:'The northern courtyard follows your site map.'},{x:600,z:0,name:'The Ground Floor',text:'A simplified basement inspired by your floor plan.'}];
 for(const s of sites){box(s.x,.3,s.z,2,.12,2,'e7b858');box(s.x,3.8,s.z,.8,.8,.8,'ffe4a0');}
+window.buildCapitolExterior({box,tree,lamp,bench});
 const vertices=new Float32Array(data),buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);for(const [name,offset] of [['p',0],['c',12]]){const a=gl.getAttribLocation(prog,name);gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,24,offset);}gl.enable(gl.DEPTH_TEST);
 const uvp=gl.getUniformLocation(prog,'vp'),ueye=gl.getUniformLocation(prog,'eye'),ufog=gl.getUniformLocation(prog,'fog');
 function multiply(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o;}
@@ -118,7 +115,7 @@ function hud(){let place='Congress Avenue',hint='Follow the promenade to the sou
 ctx.fillStyle='#72916c';ctx.fillRect(0,0,220,220);const scale=.58,tx=a=>110+a*scale,tz=a=>106+a*scale;
 ctx.fillStyle='#bfc1a6';for(const a of [-106,106,184])ctx.fillRect(tx(a)-4,0,8,220);for(const a of [-154,124,204])ctx.fillRect(0,tz(a)-4,220,8);ctx.fillRect(106,tz(124),8,100);ctx.fillStyle='#d4c8a0';ctx.fillRect(107,tz(-130),6,145);ctx.fillStyle='#cc9c83';ctx.fillRect(tx(-65),tz(-14),130*scale,28*scale);ctx.fillRect(tx(-14),tz(-32),28*scale,64*scale);ctx.fillStyle='#e4bf8c';ctx.beginPath();ctx.arc(110,106,7,0,7);ctx.fill();
 for(let i=0;i<sites.length;i++){const s=sites[i];if(s.x>500)continue;ctx.fillStyle=found.has(i)?'#dce5c9':'#ffda70';ctx.beginPath();ctx.arc(tx(s.x),tz(s.z),3,0,7);ctx.fill();}ctx.save();ctx.translate(tx(basement?x-600:x),tz(z));ctx.rotate(yaw);ctx.fillStyle='#fff8dc';ctx.strokeStyle='#214d43';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(5,5);ctx.lineTo(0,3);ctx.lineTo(-5,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-let frames=0;function frame(t){const dt=Math.min((t-last)/1000,.04);last=t;if(active){for(let i=0;i<3;i++)step(dt/3);}const ratio=Math.min(devicePixelRatio||1,1.6),w=Math.floor(innerWidth*ratio),h=Math.floor(innerHeight*ratio);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}const fog=basement?[.4,.39,.32]:[.64,.79,.81];gl.clearColor(...fog,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(uvp,false,matrix(pos,yaw,pitch));gl.uniform3fv(ueye,pos);gl.uniform3fv(ufog,fog);gl.drawArrays(gl.TRIANGLES,0,vertices.length/6);if(frames++%6===0)hud();requestAnimationFrame(frame);}
+let frames=0;function frame(t){const dt=Math.min((t-last)/1000,.04);last=t;if(active){for(let i=0;i<3;i++)step(dt/3);}const ratio=Math.min(devicePixelRatio||1,1.6),w=Math.floor(innerWidth*ratio),h=Math.floor(innerHeight*ratio);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}const fog=basement?[.4,.39,.32]:[.57,.76,.86];gl.clearColor(...fog,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(uvp,false,matrix(pos,yaw,pitch));gl.uniform3fv(ueye,pos);gl.uniform3fv(ufog,fog);gl.drawArrays(gl.TRIANGLES,0,vertices.length/6);if(frames++%6===0)hud();requestAnimationFrame(frame);}
 // Read-only diagnostics for smoke tests.
 window.capitolGame={get state(){return {position:[...pos],active,flying,basement,landmarks:found.size,floor:basement?0:pos[1]>10?2:1,liftOpen,liftTravel,triangles:vertices.length/18,colliders:solids.length};}};
 requestAnimationFrame(frame);
