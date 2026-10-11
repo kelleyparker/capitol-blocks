@@ -1,0 +1,7 @@
+# Local previews and downloadable builds
+preview-*.png
+*.zip
+vendor/
+node_modules/
+# Local browser test uses this machine's bundled Playwright runtime
+smoke-test.cjs
