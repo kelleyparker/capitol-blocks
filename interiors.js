@@ -9,7 +9,7 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
     '2':{name:'Second floor - Chambers',ox:1200,y:.35,lift:[0,-26],bounds:[-78,78,-60,48]},
     '3':{name:'Third floor - Galleries',ox:1800,y:8.35,lift:[0,-26],bounds:[-78,78,-60,48]},
     '4':{name:'Fourth floor - North wing',ox:2400,y:.35,lift:[0,-26],bounds:[-28,28,-60,42]},
-    'E1':{name:'Extension E1',ox:3000,y:.35,minFloor:-4.65,lift:[0,52],bounds:[-72,72,-167,60]},
+    'E1':{name:'Extension E1',ox:3000,y:.35,minFloor:-4.65,lift:[0,52],bounds:[-96,96,-167,60]},
     'E2':{name:'Extension E2',ox:3600,y:.35,lift:[0,52],bounds:[-72,72,-167,60]}
   };
   const rooms=[],landmarks=[
@@ -37,7 +37,7 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
     }
     function chair(x,z,y=fy){b(x,y,z,1,.6,1,green,true);b(x,y+.6,z-.4,1,1,.2,green);}
     function desk(x,z,w=2.6,y=fy){b(x,y,z,w,.95,1.3,wood,true);b(x,y+.95,z,w,.12,1.4,'aa8661');b(x+.6,y+1.1,z,.65,.02,.6,'ece2c7');chair(x,z+1.6,y);}
-    function shelves(x,z,w=5){b(x,fy,z,w,4.8,.7,wood,true);for(let y=.5;y<4.5;y+=1){b(x,fy+y,z,w,.1,.9,'b6946d');for(let a=-w/2+.3;a<w/2;a+=.45)b(x+a,fy+y+.12,z,.3,.65,.55,['7c5149','507166','b39860'][Math.round((a+w)*10)%3]);}}
+    function shelves(x,z,w=5){b(x,fy,z-.35,w,4.8,.15,wood,true);for(const a of [-w/2,w/2])b(x+a,fy,z,.18,4.8,.9,wood,true);for(let y=.5;y<4.5;y+=1){b(x,fy+y,z,w,.1,.9,'b6946d');for(let a=-w/2+.3;a<w/2;a+=.45)b(x+a,fy+y+.12,z+.08,.3,.65,.55,['7c5149','507166','b39860'][Math.round((a+w)*10)%3]);}}
     function disc(x,z,r,y=fy,c='eadbbd'){
       for(let a=-r;a<=r;a+=1.2)for(let q=-r;q<=r;q+=1.2)if(Math.hypot(a,q)<r)b(x+a,y+.012,z+q,1.2,.02,1.2,Math.hypot(a,q)>r-1.3?wood:c);
       for(let a=-4;a<=4;a+=.6)for(let q=-4;q<=4;q+=.6){
@@ -46,10 +46,10 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
         if(inside)b(x+a,y+.04,z+q,.6,.02,.6,'605947');
       }
     }
-    function columns(x,z,r,h=8){for(let i=0;i<16;i++){const t=(i+.5)*Math.PI/8;b(x+Math.cos(t)*r,fy,z+Math.sin(t)*r,.65,h,.65,trim,true);b(x+Math.cos(t)*r,fy+h-.4,z+Math.sin(t)*r,1.1,.4,1.1,trim);}}
+    function columns(x,z,r,h=8,omit=[]){for(let i=0;i<16;i++){if(omit.includes(i))continue;const t=(i+.5)*Math.PI/8;b(x+Math.cos(t)*r,fy,z+Math.sin(t)*r,.65,h,.65,trim,true);b(x+Math.cos(t)*r,fy+h-.4,z+Math.sin(t)*r,1.1,.4,1.1,trim);}}
     function light(x,z,y=fy+8){b(x,y,z,3,.16,2,'f5e6bc');b(x,y+.16,z,3.4,.12,2.4,'bda77c');}
-    function hearing(x,z){
-      room('Committee hearing room',x,z,18,16);
+    function hearing(x,z,title='Committee hearing room'){
+      room(title,x,z,18,16);
       for(let i=0;i<9;i++){const t=Math.PI+i*Math.PI/8;desk(x+Math.cos(t)*5,z+Math.sin(t)*4,1.9);}
       for(const a of [-3,0,3])for(const q of [2,4])chair(x+a,z+q);
       light(x,z);
@@ -147,11 +147,16 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
       l.stairUp=id==='4'?null:[22,-37];l.stairDown=[-22,-22];
     }else{
       // Extension: a long central gallery, Seal Court, Central Court and office bars.
+      l.extraLifts=[[-21,-64],[21,-64],[-22,-149],[22,-149]];
       if(id==='E1'){
         floor(-44, -52.5,52,225);floor(30,-52.5,80,225);
         floor(-14,-78.5,8,173);floor(-14,44,8,32);
       }else floor(0,-52.5,140,225);
-      for(const x of [-70,70])wall(x,-52.5,.7,225);
+      if(id==='E1'){
+        // Openings join the service tunnels to the perimeter passage.
+        for(const [z,d] of [[-74.5,181],[33.5,23],[55.5,9]])wall(-70,z,.7,d);
+        wall(70,-68.5,.7,193);wall(70,47,.7,26);
+      }else for(const x of [-70,70])wall(x,-52.5,.7,225);
       for(const z of [-165,60])wall(0,z,140,.7);
       b(0,fy+9,-52.5,140,.5,225,'ddd9c4');
       // Distinct skylights and dark planted light courts between office rows.
@@ -161,19 +166,30 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
         for(let x=26;x<65;x+=5){b(s*x,fy+.7,z,2,.8,2,'799367');b(s*x,fy+8.45,z,.15,.2,4,'8ea8a0');}
       }
       const rows=[-139,-113,-87,-49,-23,3];
+      // E1 office sequences follow the reference from the central aisle outward.
+      const e1West=[[504,506,508,510,512],[402,406,410,414,418,422,424],[404,408,412,416,420],[304,308,312,316,320],[302,306,310,314,318,324],[204,208,212,216,220]];
+      const e1East=[[606,608,610],[702,706,710,714,716],[704,708,712],[804,808,812],[802,806,810,814],[904,908]];
       for(const s of [-1,1])for(let i=0;i<rows.length;i++){
         const z=rows[i],band=(s<0?[500,400,400,300,300,200]:[600,700,700,800,800,900])[i];
-        for(let k=0;k<6;k++){
-          const x=s*(27.5+k*7.5),num=band+2+k*2;
-          room(`${id}.${num} - ${s<0?'West':'East'} office`,x,z,7.5,17);
+        const numbers=id==='E1'?(s<0?e1West:e1East)[i]:Array.from({length:6},(_,k)=>band+2+k*2);
+        const weights=numbers.map(num=>id==='E1'&&num===908?3:1),total=weights.reduce((a,b)=>a+b,0);
+        let edge=23.75;
+        for(let k=0;k<numbers.length;k++){
+          const w=45*weights[k]/total,x=s*(edge+w/2),num=numbers[k];edge+=w;
+          const title=id==='E1'&&num===706?'Senate Mail':id==='E1'&&num===908?'Engrossing & Enrolling':`${s<0?'West':'East'} office`;
+          room(`${id}.${num} - ${title}`,x,z,w,17);
           desk(x,z,3);b(x,fy+4,z-8.25,3,1,.15,'798e84');
         }
         for(const x of [s*21,s*63])light(x,z+11);
       }
       // Committee rooms flank, but never obstruct, the central route.
-      for(const x of [-12,12])for(const z of [-135,-107,-17])hearing(x,z);
+      if(id==='E1'){
+        for(const [x,z,title] of [[-12,-135,'E1.030 - House Appropriations'],[12,-135,'E1.036 - Senate Finance'],[-12,-107,'E1.026 - Committee hearing room'],[12,-107,'E1.028 - Committee hearing room'],[-12,-35,'E1.014 - Committee hearing room'],[12,-35,'E1.016 - Committee hearing room'],[-12,-17,'E1.010 - Committee hearing room'],[12,-17,'E1.012 - Committee hearing room']])hearing(x,z,title);
+        room('E1.034 - Legislative Budget Board',0,-147,12,10);desk(0,-147,4);
+        for(const [x,z,num] of [[-11,-45,'018'],[11,-45,'020'],[-11,-84,'022'],[11,-84,'024']]){name(`E1.${num} - Court-side office`,x,z,6,4);desk(x,z,2.2);}
+      }else for(const x of [-12,12])for(const z of [-135,-107,-17])hearing(x,z);
       disc(0,-64,15,fy,id==='E1'?'7095a5':'ddd1b4');columns(0,-64,17,8.3);
-      disc(0,38,10);columns(0,38,11.5,8.3);
+      disc(0,38,10);columns(0,38,11.5,8.3,id==='E1'?[10]:[]);
       name('Central Court - Open-air Rotunda',0,-64,36,36);
       name('Seal Court',0,38,25,25);
       name('Central Gallery',0,-31,8,32);
@@ -181,13 +197,22 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
       b(0,fy+8.5,-64,27,.25,27,'c6e0d7');
       for(let a=-12;a<=12;a+=4){b(a,fy+8.3,-64,.2,.2,27,'94aaa0');b(0,fy+8.3,-64+a,27,.2,.2,'94aaa0');}
       if(id==='E1'){
-        room('Public Cafeteria - E1.002',-44,38,44,28);
-        for(const x of [-57,-44,-31])for(const z of [32,40]){desk(x,z,4);chair(x,z-2);}
-        b(-44,fy,25,38,1.3,2,'7a8870',true);
-        room('Auditorium - E1.004',44,38,44,28);
-        b(44,fy,27,30,.5,5,wood,true);
-        for(let x=29;x<=59;x+=4)for(const z of [34,39,44])chair(x,z);
+        room('Public Cafeteria - E1.002',-42,41,48,24);
+        for(const x of [-51,-38,-25])for(const z of [37,45]){desk(x,z,4);chair(x,z-2);}
+        b(-42,fy,31,40,1.3,2,'7a8870',true);
+        room('E1.210 - Press Corps',-61,36,8,12);desk(-61,36,3);
+        room('House Mail - E1.206',-51,20,14,10);b(-51,fy,17,10,3,1.2,'9c8667',true);
+        room('Capitol Gift Shop',-6,21,7,14);shelves(-6,16,5);desk(-6,24,2.6);
+        room('E1.008 - Office of the First Lady',31,22,18,14);desk(31,21,4);
+        room("Governor's Appointments",54,22,22,14);desk(54,21,5);
+        room('Auditorium - E1.004',44,44,44,18);
+        b(44,fy,37,30,.5,3,wood,true);
+        for(let x=29;x<=59;x+=4)for(const z of [41,45,49])chair(x,z);
         stairs(-14,26,false);l.minFloor=-4.65;l.stairUp=null;l.stairDown=[-14,8];l.down='E2';
+        for(const [title,x,z] of [['Supreme Court Building tunnel',-82,19],['Loading Dock - 13th & Colorado',-82,48],['Sam Houston Building tunnel',82,31]]){
+          floor(x,z,24,6);wall(x,z-3,24,.5);wall(x,z+3,24,.5);wall(Math.sign(x)*94,z,.5,6);
+          b(x,fy+9,z,24,.5,6,trim);name(title,x,z,24,6);light(x,z);
+        }
       }else{
         room('Legislative Conference Center - E2.002',44,38,44,28);
         for(const z of [32,42]){b(44,fy,z,26,1,3,wood,true);for(let x=34;x<=54;x+=4){chair(x,z+3);chair(x,z-3);}}
@@ -196,13 +221,17 @@ window.buildCapitolInteriors = function ({box, begin, end}) {
       }
       // Northern tunnels are short explorable corridors with closed far ends.
       for(const s of [-1,1]){
-        floor(s*28,-157,48,8);wall(s*28,-153,48,.5);wall(s*28,-161,48,.5);
+        floor(s*28,-157,48,8);
+        if(id==='E1'){wall(s*12.5,-153,17,.5);wall(s*39.5,-153,25,.5);}else wall(s*28,-153,48,.5);
+        wall(s*28,-161,48,.5);
         name(s<0?'John H. Reagan Building tunnel':'Workforce Commission / Robert E. Johnson tunnel',s*28,-157,48,8);
       }
       for(const z of [-146,-95,-38,17,54]){light(0,z);for(const x of [-20,20])light(x,z);}
     }
     const [lx,lz]=l.lift;
-    b(lx,fy+.02,lz,6,.04,5,'739b89');for(const x of [lx-3.5,lx+3.5])b(x,fy,lz,.25,4.5,.25,'c5ab78');b(lx,fy+4.5,lz,7.2,.25,.25,'c5ab78');
+    for(const [px,pz] of [l.lift,...(l.extraLifts||[])]){
+      b(px,fy+.02,pz,6,.04,5,'739b89');for(const x of [px-3.5,px+3.5])b(x,fy,pz,.25,4.5,.25,'c5ab78');b(px,fy+4.5,pz,7.2,.25,.25,'c5ab78');
+    }
     l.spawn=[lx,lz];
     for(const p of landmarks.filter(p=>p.level===id)){
       b(p.x-ox,fy+.02,p.z,2,.04,2,'e5b665');b(p.x-ox,fy+3.8,p.z,.7,.7,.7,'f1d692');

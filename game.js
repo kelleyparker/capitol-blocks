@@ -99,7 +99,7 @@ const ride=document.createElement('div');ride.id='lift-ride';ride.hidden=true;ri
 function closeLift(){liftOpen=false;liftPanel.hidden=true;keys.clear();}
 function enterLevel(id,arrival){stairReturn=false;level=id;basement=id==='0';const l=levels[id],p=arrival||l.spawn||l.lift;pos=[l.ox+p[0],l.y+1.8,p[1]];vy=0;flying=false;grounded=true;keys.clear();}
 function travelTo(id,stairs=false){liftTarget=id;stairArrival=stairs;closeLift();liftTravel=1.4;flying=false;vy=0;ride.textContent=(stairs?'Stairs - ':'Elevator - ')+levels[id].name;ride.hidden=false;}
-function useLift(){const l=levels[level],x=pos[0]-l.ox;if(l.stairDown&&['2','3','4'].includes(level)&&Math.hypot(x-l.stairDown[0],pos[2]-l.stairDown[1])<5){travelTo(l.down,true);return;}if(Math.hypot(x-l.lift[0],pos[2]-l.lift[1])>6||Math.abs(pos[1]-1.8-l.y)>1){toast('Use the green elevator pad '+(level.startsWith('E')?'south of Seal Court.':'in the north lobby.'));return;}keys.clear();liftOpen=true;liftPanel.hidden=false;if(document.pointerLockElement)document.exitPointerLock();liftPanel.querySelector('[data-floor="'+level+'"]').focus();}
+function useLift(){const l=levels[level],x=pos[0]-l.ox;if(l.stairDown&&['2','3','4'].includes(level)&&Math.hypot(x-l.stairDown[0],pos[2]-l.stairDown[1])<5){travelTo(l.down,true);return;}if(![l.lift,...(l.extraLifts||[])].some(p=>Math.hypot(x-p[0],pos[2]-p[1])<6)||Math.abs(pos[1]-1.8-l.y)>1){toast('Use the green elevator pad '+(level.startsWith('E')?'at Seal Court, Central Court, or the north tunnels.':'in the north lobby.'));return;}keys.clear();liftOpen=true;liftPanel.hidden=false;if(document.pointerLockElement)document.exitPointerLock();liftPanel.querySelector('[data-floor="'+level+'"]').focus();}
 liftPanel.addEventListener('click',e=>{const button=e.target.closest('button');if(!button)return;if(button.id==='lift-close'){closeLift();return;}travelTo(button.dataset.floor);});
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),4200);}
 function pause(){closeLift();ride.hidden=true;active=false;keys.clear();$('menu').classList.remove('hidden');$('play').innerHTML='Continue exploring <span>↗</span>';if(document.pointerLockElement)document.exitPointerLock();}
@@ -126,12 +126,12 @@ for(let i=0;i<sites.length;i++){const site=sites[i],siteLevel=site.level||(site.
 const ctx=$('map').getContext('2d');
 function interiorHud(){
   const l=levels[level],x=pos[0]-l.ox,z=pos[2];
-  const r=expanded.rooms.find(r=>r.level===level&&x>=r.x1&&x<=r.x2&&z>=r.z1&&z<=r.z2);
+  const r=expanded.rooms.filter(r=>r.level===level&&x>=r.x1&&x<=r.x2&&z>=r.z1&&z<=r.z2).sort((a,b)=>(a.x2-a.x1)*(a.z2-a.z1)-(b.x2-b.x1)*(b.z2-b.z1))[0];
   $('place').textContent=r?r.title:l.name;
-  let hint=level.startsWith('E')?'Elevator south of Seal Court - E to choose a floor.':'North lobby elevator - E. Stairs are beside the north wing.';
+  let hint=level.startsWith('E')?'Elevators: Seal Court, Central Court, north tunnels - E.':'North lobby elevator - E. Stairs are beside the north wing.';
   if(['2','3','4'].includes(level)&&Math.hypot(x+22,z+22)<6)hint='Press E at this landing to descend to '+levels[l.down].name+'.';
   if(l.stairUp&&Math.hypot(x-l.stairUp[0],z-l.stairUp[1])<20)hint='Walk north up the steps to '+levels[l.up].name+'.';
-  if(level==='E1'&&Math.hypot(x+14,z-18)<14)hint='Walk down the steps beside Seal Court to Extension E2.';
+  if(level==='E1'&&Math.abs(x+14)<4&&z>6&&z<30)hint='Walk down the steps beside Seal Court to Extension E2.';
   if(liftOpen)hint='Choose a floor in the elevator panel.';
   $('hint').textContent=hint;$('mode').textContent=flying?'FLYING':l.name.toUpperCase();
   document.querySelector('.maptitle').innerHTML='CAPITOL '+(level==='0'?'GROUND FLOOR':level)+' <span>N &uarr;</span>';
@@ -139,12 +139,12 @@ function interiorHud(){
   const q=l.bounds,scale=Math.min(190/(q[1]-q[0]),190/(q[3]-q[2]));
   const tx=a=>110+(a-(q[0]+q[1])/2)*scale,tz=a=>110+(a-(q[2]+q[3])/2)*scale;
   ctx.fillStyle='#bba98b';ctx.fillRect(tx(q[0]),tz(q[2]),(q[1]-q[0])*scale,(q[3]-q[2])*scale);
-  for(const r of expanded.rooms.filter(r=>r.level===level)){ctx.fillStyle=r.title.includes('Court')?'#8ba59a':r.title.includes('Chamber')||r.title.includes('Gallery')?'#6b8b74':'#d4c4a5';ctx.fillRect(tx(r.x1),tz(r.z1),(r.x2-r.x1)*scale,(r.z2-r.z1)*scale);ctx.strokeStyle='#7e816b';ctx.strokeRect(tx(r.x1),tz(r.z1),(r.x2-r.x1)*scale,(r.z2-r.z1)*scale);}
+  for(const r of expanded.rooms.filter(r=>r.level===level).sort((a,b)=>(b.x2-b.x1)*(b.z2-b.z1)-(a.x2-a.x1)*(a.z2-a.z1))){ctx.fillStyle=r.title.includes('Court')?'#8ba59a':r.title.includes('Chamber')||r.title.includes('Gallery')?'#6b8b74':'#d4c4a5';ctx.fillRect(tx(r.x1),tz(r.z1),(r.x2-r.x1)*scale,(r.z2-r.z1)*scale);ctx.strokeStyle='#7e816b';ctx.strokeRect(tx(r.x1),tz(r.z1),(r.x2-r.x1)*scale,(r.z2-r.z1)*scale);}
   ctx.fillStyle='#f3deb0';ctx.font='8px Segoe UI';ctx.textAlign='center';
   if(level==='2'||level==='3'){ctx.fillText('HOUSE',tx(-48),tz(0));ctx.fillText('SENATE',tx(48),tz(0));}
   if(level.startsWith('E')){ctx.fillText('CENTRAL COURT',tx(0),tz(-64));ctx.fillText('SEAL COURT',tx(0),tz(38));}
   for(let i=0;i<sites.length;i++)if((sites[i].level||(sites[i].x===600?'0':'1'))===level){ctx.fillStyle=found.has(i)?'#dce5c9':'#ffda70';ctx.beginPath();ctx.arc(tx(sites[i].x-l.ox),tz(sites[i].z),3,0,7);ctx.fill();}
-  ctx.fillStyle='#73bba0';ctx.fillRect(tx(l.lift[0])-3,tz(l.lift[1])-3,6,6);
+  ctx.fillStyle='#73bba0';for(const p of [l.lift,...(l.extraLifts||[])])ctx.fillRect(tx(p[0])-3,tz(p[1])-3,6,6);
   ctx.save();ctx.translate(tx(x),tz(z));ctx.rotate(yaw);ctx.fillStyle='#fff8dc';ctx.strokeStyle='#214d43';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(5,5);ctx.lineTo(0,3);ctx.lineTo(-5,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
 }
 function hud(){if(level!=='1'){interiorHud();return;}document.querySelector('.maptitle').innerHTML='THE CAPITOL DISTRICT <span>N &uarr;</span>';let place='Congress Avenue',hint='Follow the promenade to the south entrance.';const x=pos[0],z=pos[2];if(basement){place='Ground floor';hint='Explore the basement corridors. Lift: north lobby.';}else if(Math.abs(x)<67&&Math.abs(z)<34){place=Math.abs(x)>16?(x<0?'West wing · First floor':'East wing · First floor'):z>15?'South lobby':z<-15?'North lobby':'The rotunda';hint=z<-17&&Math.abs(x)<12?'Press E on the green pad to visit the basement.':'Follow the tiled corridors and explore the rooms.';}else if(z<-40&&Math.abs(x)<100){place='Capitol Extension';hint='Courtyards and skylights north of the Capitol.';}else if(z<120&&z>35&&Math.abs(x)<100){place='The Capitol grounds';hint='Walk through the south entrance to explore inside.';}else if(x>95){place='Brazos Street';hint='The east edge of the Capitol district.';}else if(x<-95){place='Colorado Street';hint='The west edge of the Capitol district.';}if(!basement&&Math.abs(x)<67&&Math.abs(z)<34){if(pos[1]>10){place='Second floor - Rotunda galleries';hint='Look into the rotunda, explore the wings, or take the north elevator.';}else if(Math.abs(x)>25&&Math.abs(x)<55&&Math.abs(z)<5){place='Grand staircase';hint='Walk outward to ascend; inward to return to the first floor.';}else hint='Stairs: east and west wings. Elevator: north lobby - E.';}if(liftOpen)hint='Choose a destination in the elevator panel.';$('place').textContent=place;$('hint').textContent=hint;$('mode').textContent=flying?'FLYING · SPACE ↑ / Q ↓':basement?'GROUND FLOOR':'ON FOOT';
