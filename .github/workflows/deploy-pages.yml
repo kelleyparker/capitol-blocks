@@ -29,8 +29,9 @@ jobs:
         run: |
           node --check game.js
           node --check exterior.js
+          node --check interiors.js
           mkdir -p _site
-          cp index.html style.css game.js exterior.js _site/
+          cp index.html style.css game.js exterior.js interiors.js _site/
           touch _site/.nojekyll
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
