@@ -2,6 +2,8 @@
 
 A self-contained first-person browser game inspired by Texas Capitol site maps and floor plans. No install, account, server, or internet connection required.
 
+**[Play in your browser](https://kelleyparker.github.io/capitol-blocks/)**
+
 Double-click **start-game.cmd** (Windows), or open **index.html** in Chrome, Edge, or Firefox. Click **Explore the Capitol**. If mouse lock is unavailable, hold the left mouse button and drag to look.
 
 ## Controls
@@ -17,3 +19,7 @@ Find five golden markers: south promenade, rotunda, west wing, northern extensio
 The Capitol has a hollow voxel dome, columned south entrance, four connected lobbies/corridors, office alcoves, and a simplified basement. The district includes Congress Avenue, Colorado and Brazos streets, lawns, trees, nearby buildings, and the northern extension courtyard. Interiors follow the supplied cross-shaped floor plan approximately; this is a stylized prototype, not a measured replica or wayfinding tool. Upper floors, exact room numbers, working traffic, and block editing are not implemented.
 
 Rendering uses native WebGL with no third-party libraries or remote assets. Desktop keyboard and mouse required. All source is in index.html, style.css, and game.js.
+
+## Publishing
+
+GitHub Actions automatically publishes the game to GitHub Pages on every push to `main`. The workflow validates JavaScript syntax, uploads only the three game files, and deploys the site. You can also run **Publish game to GitHub Pages** manually from the repository's Actions tab. Changes must be committed and pushed to GitHub to trigger publishing.

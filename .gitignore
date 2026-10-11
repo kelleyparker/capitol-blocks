@@ -3,5 +3,6 @@ preview-*.png
 *.zip
 vendor/
 node_modules/
+_site/
 # Local browser test uses this machine's bundled Playwright runtime
 smoke-test.cjs
