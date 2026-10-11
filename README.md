@@ -11,12 +11,13 @@ Double-click **start-game.cmd** (Windows), or open **index.html** in Chrome, Edg
 - WASD / arrow keys: move; mouse: look.
 - Shift: faster movement; Space: jump.
 - F: toggle free flight; Space / Q: ascend / descend. Flight passes through walls for exploration.
-- E: use the green lift pad in the north lobby to switch between the first floor and basement.
+- E: open the elevator floor selector on the green pad in the north lobby. Choose basement, first floor, or second floor.
+- Walk outward along the center of either wing to climb the stairs to the second floor; walk inward to descend. No jumping required.
 - R: return to Congress Avenue. Escape: pause and release mouse.
 
 Find five golden markers: south promenade, rotunda, west wing, northern extension courtyard, and basement rotunda. Progress lasts for the current browser session.
 
-The Capitol has a hollow voxel dome, columned south entrance, four connected lobbies/corridors, office alcoves, and a simplified basement. The district includes Congress Avenue, Colorado and Brazos streets, lawns, trees, nearby buildings, and the northern extension courtyard. Interiors follow the supplied cross-shaped floor plan approximately; this is a stylized prototype, not a measured replica or wayfinding tool. Upper floors, exact room numbers, working traffic, and block editing are not implemented.
+The Capitol has a hollow voxel dome, columned south entrance, four connected lobbies/corridors, office alcoves, a simplified basement, and a second floor with guarded rotunda balconies. Two walkable staircases and a three-stop elevator connect the explorable levels. The district includes Congress Avenue, Colorado and Brazos streets, lawns, trees, nearby buildings, and the northern extension courtyard. Interiors follow the supplied cross-shaped floor plan approximately; the upper galleries and stair placement are stylized additions, not a measured replica or wayfinding tool. Exact room numbers, working traffic, and block editing are not implemented.
 
 Rendering uses native WebGL with no third-party libraries or remote assets. Desktop keyboard and mouse required. All source is in index.html, style.css, and game.js.
 
